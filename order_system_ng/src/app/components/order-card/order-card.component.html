@@ -1,0 +1,48 @@
+<mat-card class="order-card" [class.archived]="isArchived">
+  <mat-card-header>
+    <div class="order-info">
+      <div class="order-number">Заказ #{{order.orderId}}</div>
+      <div class="order-date">{{order.createdAt | date:'dd.MM.yyyy HH:mm'}}</div>
+    </div>
+  </mat-card-header>
+
+  <mat-card-content>
+    <div class="items-list">
+      <ng-container *ngFor="let item of order.items">
+        <ng-container *ngFor="let unit of item.units; let i = index">
+          <div class="item" [class]="unit.status" [class.archived]="isArchived" *ngIf="unit.status !== 'done' || isArchived">
+            <div class="item-info" [class.archived]="isArchived">
+              <div class="item-name">{{item.name}}</div>
+              <button *ngIf="isArchived" 
+                      mat-raised-button
+                      class="print-button"
+                      (click)="onPrint(order._id, item._id, i)">
+                <mat-icon>print</mat-icon>
+                Чек
+              </button>
+              <div class="item-status" *ngIf="isArchived">
+                <mat-icon>check_circle</mat-icon>
+                Выполнено
+              </div>
+            </div>
+            <div class="item-actions" *ngIf="!isArchived">
+              <button mat-raised-button
+                      class="print-button"
+                      (click)="onPrint(order._id, item._id, i)">
+                <mat-icon>print</mat-icon>
+                Чек
+              </button>
+              <button mat-raised-button
+                      [class.start-button]="unit.status === 'new'"
+                      [class.done-button]="unit.status === 'in_progress'"
+                      (click)="onStartCooking(order._id, item._id, i, unit.status)">
+                <mat-icon>{{unit.status === 'new' ? 'play_arrow' : 'check'}}</mat-icon>
+                {{unit.status === 'new' ? 'Начать готовить' : 'Готово'}}
+              </button>
+            </div>
+          </div>
+        </ng-container>
+      </ng-container>
+    </div>
+  </mat-card-content>
+</mat-card> 

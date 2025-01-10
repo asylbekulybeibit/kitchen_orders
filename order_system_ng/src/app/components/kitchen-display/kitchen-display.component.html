@@ -1,0 +1,52 @@
+<div class="kitchen-display">
+  <!-- Кнопки переключения -->
+  <div class="display-controls">
+    <button mat-raised-button
+            [class.mat-primary]="!showArchive"
+            [class.mat-basic]="showArchive"
+            (click)="setDisplayMode(false)">
+      <mat-icon>list</mat-icon>
+      Активные заказы
+      <span class="order-count" *ngIf="activeOrders.length > 0">({{activeOrders.length}})</span>
+    </button>
+    <button mat-raised-button
+            [class.mat-primary]="showArchive"
+            [class.mat-basic]="!showArchive"
+            (click)="setDisplayMode(true)">
+      <mat-icon>archive</mat-icon>
+      Архив
+    </button>
+  </div>
+
+  <!-- Контейнер для заказов -->
+  <div class="orders-container">
+    <!-- Активные заказы -->
+    <div class="orders-grid" *ngIf="!showArchive">
+      <app-order-card
+        *ngFor="let order of activeOrders"
+        [order]="order"
+        [isArchived]="false"
+        (orderArchived)="onOrderArchived($event)">
+      </app-order-card>
+      
+      <div *ngIf="activeOrders.length === 0" class="no-orders">
+        <mat-icon>info</mat-icon>
+        <p>Нет активных заказов</p>
+      </div>
+    </div>
+
+    <!-- Архивные заказы -->
+    <div class="orders-grid" *ngIf="showArchive">
+      <app-order-card
+        *ngFor="let order of archivedOrders"
+        [order]="order"
+        [isArchived]="true">
+      </app-order-card>
+
+      <div *ngIf="archivedOrders.length === 0" class="no-orders">
+        <mat-icon>info</mat-icon>
+        <p>Архив пуст</p>
+      </div>
+    </div>
+  </div>
+</div> 

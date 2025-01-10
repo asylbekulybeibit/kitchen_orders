@@ -1,0 +1,275 @@
+{
+  "info": {
+    "name": "Kitchen Orders API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": ["{{base_url}}"],
+              "path": ["orders"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spot_id\": 1,\n  \"spot_name\": \"Основной зал\",\n  \"table_id\": 1,\n  \"table_name\": \"Стол 1\",\n  \"order_id\": 12345,\n  \"order_number\": \"P001\",\n  \"products\": [\n    {\n      \"product_id\": 1,\n      \"product_name\": \"Бургер классический\",\n      \"count\": 2,\n      \"price\": 2500\n    },\n    {\n      \"product_id\": 2,\n      \"product_name\": \"Картофель фри\",\n      \"count\": 1,\n      \"price\": 800\n    }\n  ],\n  \"sum\": 5800,\n  \"created_at\": \"2024-03-14T10:00:00.000Z\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Save order and item IDs\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.items && jsonData.items.length > 0) {",
+                  "        pm.environment.set(\"item_id\", jsonData.items[0]._id);",
+                  "        pm.environment.set(\"item_id_2\", jsonData.items[1]._id);",
+                  "        pm.environment.set(\"order_id\", jsonData.orderId);",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test(\"Initial items status should be 'new'\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.items[0].status).to.equal('new');",
+                  "    pm.expect(jsonData.items[1].status).to.equal('new');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Active Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/orders/active",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "active"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(Array.isArray(jsonData)).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Item Status (In Progress)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}", "status"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemId\": \"{{item_id}}\",\n  \"status\": \"in_progress\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"First item status should be 'in_progress'\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    const item = jsonData.items.find(i => i._id === pm.environment.get('item_id'));",
+                  "    pm.expect(item.status).to.equal('in_progress');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Print Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/print",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}", "print"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemId\": \"{{item_id}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Complete First Item",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}", "status"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemId\": \"{{item_id}}\",\n  \"status\": \"done\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"First item should be 'done', order should still be active\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    const item = jsonData.items.find(i => i._id === pm.environment.get('item_id'));",
+                  "    pm.expect(item.status).to.equal('done');",
+                  "    pm.expect(jsonData.isArchived).to.equal(false);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Complete Second Item",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}", "status"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemId\": \"{{item_id_2}}\",\n  \"status\": \"done\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"All items should be 'done', order should be archived\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    const allDone = jsonData.items.every(item => item.status === 'done');",
+                  "    pm.expect(allDone).to.be.true;",
+                  "    pm.expect(jsonData.isArchived).to.equal(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Archived Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/orders/archive",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "archive"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Archive should contain our order\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(Array.isArray(jsonData)).to.be.true;",
+                  "    const order = jsonData.find(o => o.orderId === pm.environment.get('order_id'));",
+                  "    pm.expect(order).to.not.be.undefined;",
+                  "    pm.expect(order.isArchived).to.be.true;",
+                  "    const allDone = order.items.every(item => item.status === 'done');",
+                  "    pm.expect(allDone).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    }
+  ]
+} 
