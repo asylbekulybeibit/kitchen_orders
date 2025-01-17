@@ -1,25 +1,44 @@
-# Dependencies
+# Node.js
 node_modules/
 npm-debug.log
 yarn-debug.log
 yarn-error.log
 
-# Environment
-.env
-.env.local
-.env.*.local
+# Angular
+/dist
+/tmp
+/out-tsc
+/bazel-out
+.angular/
 
-# Build output
-dist/
-build/
-out/
-
-# IDE files
+# IDEs and editors
 .idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
 .vscode/
-*.swp
-*.swo
 
-# OS files
+# Environment files
+.env
+.env.*
+!.env.example
+
+# System Files
 .DS_Store
 Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Receipts and temp files
+order_system_api/public/receipts/*
+!order_system_api/public/receipts/.gitkeep
+printexpress/temp/*
+!printexpress/temp/.gitkeep
