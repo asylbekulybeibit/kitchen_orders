@@ -1,91 +1,151 @@
-const fs = require('fs');
-const path = require('path');
-const { exec } = require('child_process');
 const os = require('os');
+const path = require('path');
+const fs = require('fs');
+const { exec } = require('child_process');
+const puppeteer = require('puppeteer');
+const pdfPrinter = require('pdf-to-printer');
 
-// Функция для печати HTML через Edge в headless режиме
-async function print(html) {
-  const tempDir = path.join(process.cwd(), 'temp');
-  if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir, { recursive: true });
-  }
-
-  const tempFile = path.join(tempDir, `receipt_${Date.now()}.html`);
-  fs.writeFileSync(tempFile, html);
-
-  try {
-    await createPdf(tempFile);
-    await printPdf(tempFile + '.pdf');
-    console.log('Печать завершена успешно');
-  } catch (error) {
-    throw new Error(`Ошибка печати: ${error.message}`);
-  } finally {
-    // Удаляем временные файлы
-    try {
-      fs.unlinkSync(tempFile);
-      fs.unlinkSync(tempFile + '.pdf');
-    } catch (e) {
-      console.error('Ошибка при удалении временных файлов:', e);
+class PrinterService {
+  constructor() {
+    this.platform = os.platform();
+    this.printerName = process.env.PRINTER_NAME || '';
+    this.tempDir = path.join(__dirname, 'temp');
+    
+    // Создаем временную директорию, если её нет
+    if (!fs.existsSync(this.tempDir)) {
+      fs.mkdirSync(this.tempDir, { recursive: true });
     }
   }
-}
 
-// Создание PDF из HTML
-function createPdf(filePath) {
-  return new Promise((resolve, reject) => {
-    const command = `start /min "" msedge --headless --disable-gpu --print-to-pdf-no-header --print-to-pdf="${filePath}.pdf" "${filePath}"`;
-    
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        reject(new Error(`Ошибка создания PDF: ${error.message}`));
-        return;
-      }
-      // Ждем создания PDF
-      setTimeout(resolve, 2000);
+  async print(html) {
+    try {
+      const timestamp = Date.now();
+      const tempHtmlPath = path.join(this.tempDir, `receipt_${timestamp}.html`);
+      const tempPdfPath = path.join(this.tempDir, `receipt_${timestamp}.html.pdf`);
+
+      // Сохраняем HTML во временный файл
+      await fs.promises.writeFile(tempHtmlPath, html, 'utf8');
+
+      // Конвертируем HTML в PDF с помощью puppeteer
+      const browser = await puppeteer.launch({
+        headless: 'new',
+        args: ['--no-sandbox']
+      });
+      const page = await browser.newPage();
+      await page.setContent(html);
+      await page.pdf({
+        path: tempPdfPath,
+        format: 'A7',
+        margin: {
+          top: '5mm',
+          right: '5mm',
+          bottom: '5mm',
+          left: '5mm'
+        }
+      });
+      await browser.close();
+
+      // Отправляем PDF на печать в зависимости от ОС
+      await this.printPdfByPlatform(tempPdfPath);
+
+      // Очищаем временные файлы
+      this.cleanupTempFiles(tempHtmlPath, tempPdfPath);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error printing:', error);
+      throw error;
+    }
+  }
+
+  async printPdfByPlatform(pdfPath) {
+    switch (this.platform) {
+      case 'win32':
+        await this.printWindows(pdfPath);
+        break;
+      case 'darwin':
+        await this.printMacOS(pdfPath);
+        break;
+      case 'linux':
+        await this.printLinux(pdfPath);
+        break;
+      default:
+        throw new Error(`Unsupported platform: ${this.platform}`);
+    }
+  }
+
+  async printWindows(pdfPath) {
+    try {
+      const options = this.printerName ? { printer: this.printerName } : {};
+      await pdfPrinter.print(pdfPath, options);
+    } catch (error) {
+      console.error('Error printing on Windows:', error);
+      // Пробуем запасной вариант с SumatraPDF
+      const command = this.printerName
+        ? `SumatraPDF.exe -print-to "${this.printerName}" "${pdfPath}"`
+        : `SumatraPDF.exe -print-dialog "${pdfPath}"`;
+
+      return new Promise((resolve, reject) => {
+        exec(command, (error) => {
+          if (error) {
+            console.error('Error printing with SumatraPDF:', error);
+            reject(error);
+          } else {
+            resolve();
+          }
+        });
+      });
+    }
+  }
+
+  async printMacOS(pdfPath) {
+    const command = this.printerName
+      ? `lpr -P "${this.printerName}" "${pdfPath}"`
+      : `lpr "${pdfPath}"`;
+
+    return new Promise((resolve, reject) => {
+      exec(command, (error) => {
+        if (error) {
+          console.error('Error printing on macOS:', error);
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
     });
-  });
-}
+  }
 
-// Печать PDF файла
-function printPdf(pdfPath) {
-  return new Promise((resolve, reject) => {
-    const command = `PDFtoPrinter.exe "${pdfPath}"`;
-    
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        reject(new Error(`Ошибка печати PDF: ${error.message}`));
-        return;
-      }
-      resolve();
+  async printLinux(pdfPath) {
+    const command = this.printerName
+      ? `lp -d "${this.printerName}" "${pdfPath}"`
+      : `lp "${pdfPath}"`;
+
+    return new Promise((resolve, reject) => {
+      exec(command, (error) => {
+        if (error) {
+          console.error('Error printing on Linux:', error);
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
     });
-  });
-}
+  }
 
-// Получение списка принтеров
-function getPrinters() {
-  return new Promise((resolve, reject) => {
-    exec('wmic printer get name', (error, stdout, stderr) => {
-      if (error) {
-        reject(new Error(`Ошибка получения списка принтеров: ${error.message}`));
-        return;
+  cleanupTempFiles(...files) {
+    files.forEach(file => {
+      if (fs.existsSync(file)) {
+        fs.unlink(file, (err) => {
+          if (err) console.error(`Error deleting temp file ${file}:`, err);
+        });
       }
-
-      const printers = stdout
-        .split('\n')
-        .slice(1)
-        .map(line => line.trim())
-        .filter(line => line.length > 0)
-        .map(name => ({
-          name,
-          system: os.platform()
-        }));
-
-      resolve(printers);
     });
-  });
+  }
 }
 
 module.exports = {
-  print,
-  getPrinters
+  print: async (html) => {
+    const printer = new PrinterService();
+    return printer.print(html);
+  }
 }; 

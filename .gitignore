@@ -1,15 +1,30 @@
-# Node.js
+# Dependencies
 node_modules/
-npm-debug.log
-yarn-debug.log
-yarn-error.log
+.pnp/
+.pnp.js
 
-# Angular
-/dist
-/tmp
-/out-tsc
-/bazel-out
+# Environment files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Build output
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Angular specific
 .angular/
+.sass-cache/
+connect.lock/
+coverage/
+libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+typings/
 
 # IDEs and editors
 .idea/
@@ -19,16 +34,21 @@ yarn-error.log
 *.launch
 .settings/
 *.sublime-workspace
-.vscode/
-
-# Environment files
-.env
-.env.*
-!.env.example
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 
 # System Files
 .DS_Store
 Thumbs.db
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+*.temp
 
 # Logs
 logs
@@ -42,3 +62,22 @@ order_system_api/public/receipts/*
 !order_system_api/public/receipts/.gitkeep
 printexpress/temp/*
 !printexpress/temp/.gitkeep
+
+# MongoDB
+*.mongodb
+mongodb/
+data/db/
+
+# Testing
+/coverage
+/.nyc_output
+
+# Production
+/build
+
+# Misc
+*.pem
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
