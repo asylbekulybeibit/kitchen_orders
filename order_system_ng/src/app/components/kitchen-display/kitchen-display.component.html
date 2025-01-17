@@ -1,0 +1,80 @@
+<div class="kitchen-display">
+  <div class="control-panel">
+    <button class="control-btn" [class.active]="!showArchived" (click)="showArchived = false">
+      Активные заказы ({{activeOrders.length}})
+    </button>
+    <button class="control-btn" [class.active]="showArchived" (click)="showArchived = true">
+      Архив заказов
+    </button>
+    <div class="delayed-info" [class.warning]="hasDelayedOrders">
+      Опаздывающие заказы ({{delayedOrdersCount}})
+    </div>
+    <button class="control-btn sync" [class.syncing]="isSyncing" (click)="syncMenu()">
+      Синхронизировать меню
+    </button>
+  </div>
+
+  <div class="orders-grid">
+    <div class="order-card" *ngFor="let order of (showArchived ? archivedOrders : activeOrders)">
+      <div class="order-header" [class.warning]="!showArchived && getOrderAge(order.created_at) > 60" [class.completed]="showArchived">
+        <div class="order-info">
+          <h3>Заказ #{{order.order_id}}</h3>
+          <p>Стол: {{order.table_id}}</p>
+          <p>Время: {{order.created_at | date:'HH:mm'}}</p>
+        </div>
+        <ng-container *ngIf="!showArchived">
+          <ng-container *ngIf="getOrderTime(order.order_id) | async as orderTime">
+            <p class="timer" [class.warning]="orderTime.isWarning">
+              {{orderTime.time}}
+            </p>
+          </ng-container>
+        </ng-container>
+      </div>
+
+      <div class="products-list">
+        <div class="product-item" *ngFor="let product of order.products">
+          <div class="unit-block" *ngFor="let i of getUnitArray(product.count)" [class]="product.units && product.units[i] ? product.units[i].status : 'new'">
+            <div class="product-header">
+              <h4>{{product.product_name}} ({{i + 1}}/{{product.count}})</h4>
+              <div class="status-buttons">
+                <button class="status-btn" 
+                  [class]="product.units && product.units[i] ? product.units[i].status : 'new'"
+                  [disabled]="isStatusButtonDisabled(product.units && product.units[i] ? product.units[i].status : 'new')"
+                  (click)="updateUnitStatus(order.order_id, product.product_id, i)">
+                  {{getStatusButtonText(product.units && product.units[i] ? product.units[i].status : 'new')}}
+                </button>
+                <button class="print-btn" (click)="printUnitReceipt(order, product, i)">
+                  Чек
+                </button>
+              </div>
+            </div>
+            <div class="product-details">
+              <div class="modifications" *ngIf="product.modifications?.length">
+                <p>Модификаторы:</p>
+                <ul>
+                  <li *ngFor="let mod of product.modifications">
+                    {{mod['group_name']}}: {{mod['name']}}
+                  </li>
+                </ul>
+              </div>
+              <div class="ingredients" *ngIf="product.ingredients?.length">
+                <p>Ингредиенты:</p>
+                <ul>
+                  <li *ngFor="let ing of product.ingredients" [class.removed]="ing.removed">
+                    {{ing.name}}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-receipt-preview-modal 
+  *ngIf="previewReceiptUrl" 
+  [receiptUrl]="previewReceiptUrl"
+  (printClicked)="onPrintClicked()">
+</app-receipt-preview-modal> 

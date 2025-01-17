@@ -1,0 +1,194 @@
+{
+  "info": {
+    "name": "Kitchen Orders API",
+    "description": "API для системы управления заказами кухни",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Menu",
+      "item": [
+        {
+          "name": "Sync Menu",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menu/sync",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menu", "sync"]
+            },
+            "description": "Синхронизация меню с Poster CRM"
+          }
+        },
+        {
+          "name": "Get Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menu/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menu", "categories"]
+            },
+            "description": "Получение всех категорий меню"
+          }
+        },
+        {
+          "name": "Get Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menu/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menu", "products"]
+            },
+            "description": "Получение всех продуктов"
+          }
+        },
+        {
+          "name": "Get Products by Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menu/categories/:categoryId/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menu", "categories", ":categoryId", "products"],
+              "variable": [
+                {
+                  "key": "categoryId",
+                  "value": "123",
+                  "description": "ID категории"
+                }
+              ]
+            },
+            "description": "Получение продуктов по категории"
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menu/products/:productId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menu", "products", ":productId"],
+              "variable": [
+                {
+                  "key": "productId",
+                  "value": "123",
+                  "description": "ID продукта"
+                }
+              ]
+            },
+            "description": "Получение продукта по ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"]
+            },
+            "description": "Получение всех заказов"
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/:orderId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", ":orderId"],
+              "variable": [
+                {
+                  "key": "orderId",
+                  "value": "123",
+                  "description": "ID заказа"
+                }
+              ]
+            },
+            "description": "Получение заказа по ID"
+          }
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"cooking\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/:orderId/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", ":orderId", "status"],
+              "variable": [
+                {
+                  "key": "orderId",
+                  "value": "123",
+                  "description": "ID заказа"
+                }
+              ]
+            },
+            "description": "Обновление статуса заказа"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "Poster Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"object_id\": \"123\",\n  \"object_type\": \"order\",\n  \"action\": \"added\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhook/poster",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhook", "poster"]
+            },
+            "description": "Вебхук для получения уведомлений от Poster CRM"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+} 

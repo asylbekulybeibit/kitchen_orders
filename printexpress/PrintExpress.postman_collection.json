@@ -1,0 +1,58 @@
+{
+	"info": {
+		"_postman_id": "your-collection-id",
+		"name": "PrintExpress",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get Printers",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3001/printers",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3001",
+					"path": [
+						"printers"
+					]
+				},
+				"description": "Получить список доступных принтеров"
+			},
+			"response": []
+		},
+		{
+			"name": "Print Receipt",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"url\": \"http://localhost:3000/receipts/receipt_123.html\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:3001/print",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3001",
+					"path": [
+						"print"
+					]
+				},
+				"description": "Отправить чек на печать"
+			},
+			"response": []
+		}
+	]
+} 
